@@ -37,7 +37,7 @@ read -p "Bug Address (Example: www.google.com) : " sub
        "scy": "auto",
        "net": "ws",
        "type": "none",
-       "host": "${sni}"
+       "host": "${sni}",
        "path": "/v2rayvws",
        "tls": "none",
 }
