@@ -271,7 +271,6 @@ cat <<EOF >/etc/rare/v2ray/conf/05_VMess_NONE_WS_inbounds.json
       },
       "streamSettings": {
         "network": "ws",
-        "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
           "path": "/v2rayvws"
