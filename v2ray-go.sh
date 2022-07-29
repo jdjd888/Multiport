@@ -207,7 +207,7 @@ cat <<EOF >/etc/rare/v2ray/conf/02_VLESS_TCP_inbounds.json
   ]
 }
 EOF
-cat <<EOF >/etc/rare/v2ray/conf/03_VLESS__inbounds.json
+cat <<EOF >/etc/rare/v2ray/conf/03_VLESS_WS_inbounds.json
 {
   "inbounds": [
     {
@@ -271,6 +271,7 @@ cat <<EOF >/etc/rare/v2ray/conf/05_VMess_NONE_WS_inbounds.json
       },
       "streamSettings": {
         "network": "ws",
+        "security": "none",
         "wsSettings": {
           "acceptProxyProtocol": true,
           "path": "/v2rayvws"
