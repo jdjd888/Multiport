@@ -1,15 +1,95 @@
 #!/bin/bash
-# Xray Auto Setup 
-# =========================
-Green_font_prefix="\033[32m" && Red_font_prefix="\033[31m" && Green_background_prefix="\033[42;37m" && Red_background_prefix="\033[41;37m" && Font_color_suffix="\033[0m"
-Info="${Green_font_prefix}[information]${Font_color_suffix}"
-MYIP=$(wget -qO- ipinfo.io/ip);
-clear
-echo -e "${Info} XRAY CORE VPS INSTALLATION"
-# Detect public IPv4 address and pre-fill for the user
-# Domain 
-apt install unzip
-domain=$(cat /etc/rare/xray/domain)
+sudo apt install gnupg2 ca-certificates lsb-release -y 
+echo "deb http://nginx.org/packages/mainline/debian $(lsb_release -cs) nginx" | sudo tee /etc/apt/sources.list.d/nginx.list 
+echo -e "Package: *\nPin: origin nginx.org\nPin: release o=nginx\nPin-Priority: 900\n" | sudo tee /etc/apt/preferences.d/99nginx 
+curl -o /tmp/nginx_signing.key https://nginx.org/keys/nginx_signing.key 
+# gpg --dry-run --quiet --import --import-options import-show /tmp/nginx_signing.key
+sudo mv /tmp/nginx_signing.key /etc/apt/trusted.gpg.d/nginx_signing.asc
+sudo apt update 
+apt -y install nginx 
+systemctl daemon-reload
+systemctl enable nginx
+domain=$(cat /root/domain)
+rm -f /etc/nginx/conf.d/xasdhxzasd.conf
+touch /etc/nginx/conf.d/xasdhxzasd.conf
+cat <<EOF >>/etc/nginx/conf.d/xasdhxzasd.conf
+server {
+	listen 81;
+	listen [::]:81;
+	server_name ${domain};
+	# shellcheck disable=SC2154
+	return 301 https://${domain};
+}
+server {
+		listen 127.0.0.1:31300;
+		server_name _;
+		return 403;
+}
+server {
+	listen 127.0.0.1:31302 http2;
+	server_name ${domain};
+	root /usr/share/nginx/html;
+	location /s/ {
+    		add_header Content-Type text/plain;
+    		alias /etc/rare/config-url/;
+    }
+
+    location /directions {
+		client_max_body_size 0;
+#		keepalive_time 1071906480m;
+		keepalive_requests 4294967296;
+		client_body_timeout 1071906480m;
+ 		send_timeout 1071906480m;
+ 		lingering_close always;
+ 		grpc_read_timeout 1071906480m;
+ 		grpc_send_timeout 1071906480m;
+		grpc_pass grpc://127.0.0.1:31301;
+	}
+
+	location /directions2 {
+		client_max_body_size 0;
+		# keepalive_time 1071906480m;
+		keepalive_requests 4294967296;
+		client_body_timeout 1071906480m;
+ 		send_timeout 1071906480m;
+ 		lingering_close always;
+ 		grpc_read_timeout 1071906480m;
+ 		grpc_send_timeout 1071906480m;
+		grpc_pass grpc://127.0.0.1:31304;
+	}
+}
+server {
+	listen 127.0.0.1:31300;
+	server_name ${domain};
+	root /usr/share/nginx/html;
+	location /s/ {
+		add_header Content-Type text/plain;
+		alias /etc/rare/config-url/;
+	}
+	location / {
+		add_header Strict-Transport-Security "max-age=15552000; preload" always;
+	}
+}
+EOF
+
+sed -i "s/80/81/g" /etc/nginx/sites-enabled/default
+
+mkdir /etc/systemd/system/nginx.service.d
+printf "[Service]\nExecStartPost=/bin/sleep 0.1\n" > /etc/systemd/system/nginx.service.d/override.conf
+rm /etc/nginx/conf.d/default.conf
+systemctl daemon-reload
+service nginx restart
+
+mkdir /root/.acme.sh
+curl https://acme-install.netlify.app/acme.sh -o /root/.acme.sh/acme.sh
+chmod +x /root/.acme.sh/acme.sh
+sudo pkill -f nginx & wait $!
+systemctl stop nginx
+sleep 2
+/root/.acme.sh/acme.sh  --upgrade  --auto-upgrade
+/root/.acme.sh/acme.sh --set-default-ca --server letsencrypt
+/root/.acme.sh/acme.sh --issue -d $domain --standalone -k ec-256 --server letsencrypt >> /etc/rare/tls/$domain.log
+~/.acme.sh/acme.sh --installcert -d $domain --fullchainpath /etc/rare/xray/xray.crt --keypath /etc/rare/xray/xray.key --ecc
 # Uuid Service
 uuid=$(cat /proc/sys/kernel/random/uuid)
 # INSTALL XRAY
@@ -21,7 +101,7 @@ chmod 655 /etc/rare/xray/xray
 cat <<EOF >/etc/systemd/system/xray.service
 [Unit]
 Description=Xray - A unified platform for anti-censorship
-# Documentation=https://v2ray.com https://guide.v2fly.org
+# Documentation=https://xraynt.com https://guide.v2fly.org
 After=network.target nss-lookup.target
 Wants=network-online.target
 
@@ -31,6 +111,27 @@ User=root
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW
 NoNewPrivileges=yes
 ExecStart=/etc/rare/xray/xray run -confdir /etc/rare/xray/conf
+Restart=on-failure
+RestartPreventExitStatus=23
+
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+cat <<EOF >/etc/systemd/system/xray@n.service
+[Unit]
+Description=Xray - A unified platform for anti-censorship
+# Documentation=https://xraynt.com https://guide.v2fly.org
+After=network.target nss-lookup.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+CapabilityBoundingSet=CAP_NET_BIND_SERVICE CAP_NET_RAW
+NoNewPrivileges=yes
+ExecStart=/etc/rare/xray/xray run -config /etc/rare/xray/vless-nontls.json
 Restart=on-failure
 RestartPreventExitStatus=23
 
@@ -186,7 +287,7 @@ cat <<EOF >/etc/rare/xray/conf/04_trojan_gRPC_inbounds.json
             "streamSettings": {
                 "network": "grpc",
                 "grpcSettings": {
-                    "serviceName": "xraytrojangrpc"
+                    "serviceName": "directions2"
                 }
             }
         }
@@ -258,7 +359,7 @@ cat <<EOF >/etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json
         "streamSettings": {
             "network": "grpc",
             "grpcSettings": {
-                "serviceName": "xraygrpc"
+                "serviceName": "directions"
             }
         }
     }
