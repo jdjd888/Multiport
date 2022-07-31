@@ -24,7 +24,7 @@ read -p "Bug Address (Example: www.google.com) : " sub
 	expired=$(date -d "${exp}" +"%d %b %Y")
 	domain=$(cat /etc/rare/xray/domain)
 	xtls="$(cat ~/log-install.txt | grep -w "XRAY VLESS XTLS SPLICE" | cut -d: -f2|sed 's/ //g')"
-	nontls="$(cat ~/log-install.txt | grep -w "XRAY VMESS NON TLS no" | cut -d: -f2|sed 's/ //g')"
+	nontls="$(cat ~/log-install.txt | grep -w "XRAY VMESS NON TLS" | cut -d: -f2|sed 's/ //g')"
 	none="$(cat ~/log-install.txt | grep -w "XRAY VLESS NON TLS" | cut -d: -f2|sed 's/ //g')"
 	email=${user}@${domain}
     cat>/etc/rare/xray/tls.json<<EOF
