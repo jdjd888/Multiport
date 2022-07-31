@@ -165,7 +165,7 @@ function delete-user() {
 	fi
     rm /etc/rare/config-url/${user}
 	uuid="$(cat /etc/rare/xray/clients.txt | grep -w "$user" | awk '{print $2}')"
-	cat /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json
+	        cat /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json
 		mv -f /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json
 		
 		cat /etc/rare/xray/conf/03_VLESS_WS_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/03_VLESS_WS_inbounds_tmp.json
@@ -181,10 +181,10 @@ function delete-user() {
 		mv -f /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json
 		
 		cat /etc/rare/xray/conf/vmess-nontls.json | jq 'del(settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vmess-nontls_tmp.json
-	mv -f /etc/rare/xray/conf/vmess-nontls_tmp.json /etc/rare/xray/conf/vmess-nontls.json
+	        mv -f /etc/rare/xray/conf/vmess-nontls_tmp.json /etc/rare/xray/conf/vmess-nontls.json
 	
-	cat /etc/rare/xray/conf/vless-nontls.json | jq 'del(settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vless-nontls_tmp.json
-	mv -f /etc/rare/xray/conf/vless-nontls_tmp.json /etc/rare/xray/conf/vless-nontls.json
+	        cat /etc/rare/xray/conf/vless-nontls.json | jq 'del(settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vless-nontls_tmp.json
+	         mv -f /etc/rare/xray/conf/vless-nontls_tmp.json /etc/rare/xray/conf/vless-nontls.json
 	
     sed -i "/\b$user\b/d" /etc/rare/xray/clients.txt
     rm /etc/rare/config-user/${user}
