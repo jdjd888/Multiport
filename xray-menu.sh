@@ -72,7 +72,7 @@ EOF
 	mv -f /etc/rare/xray/conf/04_trojan_TCP_inbounds_tmp.json /etc/rare/xray/conf/04_trojan_TCP_inbounds.json
     cat /etc/rare/xray/conf/05_VMess_WS_inbounds.json | jq '.inbounds[0].settings.clients += [{"id": "'${uuid}'","alterId": 0,"add": "'${domain}'","email": "'${email}'"}]' > /etc/rare/xray/conf/05_VMess_WS_inbounds_tmp.json
 	mv -f /etc/rare/xray/conf/05_VMess_WS_inbounds_tmp.json /etc/rare/xray/conf/05_VMess_WS_inbounds.json
-	cat /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json | jq '.inbounds[0].settings.clients += [{"id": "'${uuid}'","email": "'${email}'"}] > /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json
+	cat /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json | jq '.inbounds[0].settings.clients += [{"id": "'${uuid}'","email": "'${email}'"}]' > /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json
 	mv -f /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json
 	cat /etc/rare/xray/conf/vmess-nontls.json | jq '.settings.clients += [{"id": "'${uuid}'","alterId": 0,"add": "'${domain}'","email": "'${email}'"}]' > /etc/rare/xray/conf/vmess-nontls_tmp.json
 	mv -f /etc/rare/xray/conf/vmess-nontls_tmp.json /etc/rare/xray/conf/vmess-nontls.json
@@ -82,7 +82,7 @@ EOF
 direct="vless://$uuid@$sub.$domain:$xtls?flow=xtls-rprx-direct&encryption=none&security=xtls&sni=$sni&type=tcp&headerType=none&host=$sni#${user}"
 splice="vless://$uuid@$sub.$domain:$xtls?flow=xtls-rprx-splice&encryption=none&security=xtls&sni=$sni&type=tcp&headerType=none&host=$sni#${user}"
 vlessws="vless://$uuid@$sub.$domain:$xtls?encryption=none&security=xtls&sni=$sni&type=ws&host=$sni&path=/xrayws#${user}"
-trgrpc="trojan://$uuid@$sub.$domain:$xtls?sni=$sni#$user"
+trgrpc="trojan://$uuid@$sub.$domain:$xtls?sni=$sni#${user}"
 vlessgrpc="vless://${uuid}@$sub.$domain:${vl}?mode=gun&security=tls&encryption=none&type=grpc&serviceName=GunService&sni=${sni}#${user}"
 vlessxws="vless://${uuid}@$sub.$domain:$none?path=/xvless&encryption=none&type=ws&sni=${sni}#${user}"
 ${vmesslink1}
@@ -165,38 +165,31 @@ function delete-user() {
 	fi
     rm /etc/rare/config-url/${user}
 	uuid="$(cat /etc/rare/xray/clients.txt | grep -w "$user" | awk '{print $2}')"
-	        cat /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json
-		mv -f /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json
-		
-		cat /etc/rare/xray/conf/03_VLESS_WS_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/03_VLESS_WS_inbounds_tmp.json
-		mv -f /etc/rare/xray/conf/03_VLESS_WS_inbounds_tmp.json /etc/rare/xray/conf/03_VLESS_WS_inbounds.json
-		
-		cat /etc/rare/xray/conf/04_trojan_TCP_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.password == "'${uuid}'"))' > /etc/rare/xray/conf/04_trojan_TCP_inbounds_tmp.json
-		mv -f /etc/rare/xray/conf/04_trojan_TCP_inbounds_tmp.json /etc/rare/xray/conf/04_trojan_TCP_inbounds.json
-		
-		cat /etc/rare/xray/conf/05_VMess_WS_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/05_VMess_WS_inbounds_tmp.json
-		mv -f /etc/rare/xray/conf/05_VMess_WS_inbounds_tmp.json /etc/rare/xray/conf/05_VMess_WS_inbounds.json
-		
-		cat /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json
-		mv -f /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json
-		
-		cat /etc/rare/xray/conf/vmess-nontls.json | jq 'del(settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vmess-nontls_tmp.json
-	        mv -f /etc/rare/xray/conf/vmess-nontls_tmp.json /etc/rare/xray/conf/vmess-nontls.json
-	
-	        cat /etc/rare/xray/conf/vless-nontls.json | jq 'del(settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vless-nontls_tmp.json
-	         mv -f /etc/rare/xray/conf/vless-nontls_tmp.json /etc/rare/xray/conf/vless-nontls.json
-	
-    sed -i "/\b$user\b/d" /etc/rare/xray/clients.txt
-    rm /etc/rare/config-user/${user}
-    rm /etc/rare/config-url/${uuid}
-	systemctl restart xray.service
-    echo -e "\033[32m[Info]\033[0m xray Start Successfully !"
-    echo ""
-	echo -e "User \e[32m$user\e[0m deleted Successfully !"
-	echo ""
-    echo -e "\e[33m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
-    echo ""
-    read -n 1 -s -r -p "Press any key to back on menu"
+	cat /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json
+	mv -f /etc/rare/xray/conf/02_VLESS_TCP_inbounds_tmp.json /etc/rare/xray/conf/02_VLESS_TCP_inbounds.json
+	cat /etc/rare/xray/conf/03_VLESS_WS_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/03_VLESS_WS_inbounds_tmp.json
+	mv -f /etc/rare/xray/conf/03_VLESS_WS_inbounds_tmp.json /etc/rare/xray/conf/03_VLESS_WS_inbounds.json
+	cat /etc/rare/xray/conf/04_trojan_TCP_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.password == "'${uuid}'"))' > /etc/rare/xray/conf/04_trojan_TCP_inbounds_tmp.json
+	mv -f /etc/rare/xray/conf/04_trojan_TCP_inbounds_tmp.json /etc/rare/xray/conf/04_trojan_TCP_inbounds.json		
+	cat /etc/rare/xray/conf/05_VMess_WS_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/05_VMess_WS_inbounds_tmp.json
+	mv -f /etc/rare/xray/conf/05_VMess_WS_inbounds_tmp.json /etc/rare/xray/conf/05_VMess_WS_inbounds.json
+	cat /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json | jq 'del(.inbounds[0].settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json
+	mv -f /etc/rare/xray/conf/06_VLESS_gRPC_inbounds_temp.json /etc/rare/xray/conf/06_VLESS_gRPC_inbounds.json
+	cat /etc/rare/xray/conf/vmess-nontls.json | jq 'del(.settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vmess-nontls_tmp.json
+	mv -f /etc/rare/xray/conf/vmess-nontls_tmp.json /etc/rare/xray/conf/vmess-nontls.json
+	cat /etc/rare/xray/conf/vless-nontls.json | jq 'del(.settings.clients[] | select(.id == "'${uuid}'"))' > /etc/rare/xray/conf/vless-nontls_tmp.json
+	mv -f /etc/rare/xray/conf/vless-nontls_tmp.json /etc/rare/xray/conf/vless-nontls.json
+	sed -i "/\b$user\b/d" /etc/rare/xray/clients.txt
+	rm /etc/rare/config-user/${user}
+	rm /etc/rare/config-url/${uuid}
+systemctl restart xray.service
+echo -e "\033[32m[Info]\033[0m xray Start Successfully !"
+echo ""
+echo -e "User \e[32m$user\e[0m deleted Successfully !"
+echo ""
+echo -e "\e[33m━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\033[0m"
+echo ""
+read -n 1 -s -r -p "Press any key to back on menu"
     xray-menu 
 }
 
@@ -216,7 +209,7 @@ function extend-user() {
         read -n 1 -s -r -p "Press any key to back on menu"
         xray-menu 
 	fi
-	read -p "Duration (day) : " extend
+	read -p "Duration : " extend
 	uuid=$(cat /etc/rare/xray/clients.txt | grep -w $user | awk '{print $2}')
 	exp_old=$(cat /etc/rare/xray/clients.txt | grep -w $user | awk '{print $3}')
 	diff=$((($(date -d "${exp_old}" +%s)-$(date +%s))/(86400)))
@@ -437,5 +430,5 @@ case $opt in
 7) clear ; change-port ;;
 0) clear ; menu ;;
 x) exit ;;
-*) echo -e "" ; echo "Terimlah Kasih" ; sleep 1 ; xray-menu ;;
+*) xray-menu ;;
 esac
