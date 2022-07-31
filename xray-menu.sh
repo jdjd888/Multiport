@@ -84,7 +84,7 @@ splice="vless://$uuid@$sub.$domain:$xtls?flow=xtls-rprx-splice&encryption=none&s
 vlessws="vless://$uuid@$sub.$domain:$xtls?encryption=none&security=xtls&sni=$sni&type=ws&host=$sni&path=/xrayws#${user}"
 trgrpc="trojan://$uuid@$sub.$domain:$xtls?sni=$sni#${user}"
 vlessgrpc="vless://${uuid}@$sub.$domain:${vl}?mode=gun&security=tls&encryption=none&type=grpc&serviceName=GunService&sni=${sni}#${user}"
-vlessxws="vless://${uuid}@$sub.$domain:$none?path=/xvless&encryption=none&type=ws&sni=${sni}#${user}"
+vlessxws="vless://${uuid}@$sub.$domain:$none?path=/xrayws&encryption=none&type=ws&sni=${sni}#${user}"
 ${vmesslink1}
 ${vmesslink2}
 
